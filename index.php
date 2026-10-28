@@ -1,9 +1,48 @@
-<!doctype html>
-<html>
-  <head>
-    <title>This is the title of the webpage!</title>
-  </head>
-  <body>
-    <p>This is an example paragraph. Anything in the <strong>body</strong> tag will appear on the page, just like this <strong>p</strong> tag and its contents.</p>
-  </body>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My D1 Database</title>
+</head>
+<body>
+  <h1>Items from my database</h1>
+  <ul id="items"></ul>
+  <p id="status"></p>
+
+  <script>
+    const API_URL =
+      "https://your-worker.your-subdomain.workers.dev/api/items";
+
+    async function loadItems() {
+      const status = document.getElementById("status");
+
+      try {
+        const response = await fetch(API_URL);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const items = await response.json();
+        const list = document.getElementById("items");
+
+        list.replaceChildren();
+
+        for (const item of items) {
+          const li = document.createElement("li");
+          li.textContent = `${item.id}: ${item.name}`;
+          list.appendChild(li);
+        }
+
+        status.textContent = `${items.length} items loaded`;
+      } catch (error) {
+        status.textContent = "Could not load database items.";
+        console.error(error);
+      }
+    }
+
+    loadItems();
+  </script>
+</body>
 </html>
