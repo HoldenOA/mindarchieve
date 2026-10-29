@@ -8,60 +8,60 @@
 <body>
   <h1>D1 SQL Console</h1>
 
-  <label for="token">Admin token</label>
+  <label for="password">Admin password</label>
   <input
+    id="password"
     type="password"
-    id="token"
-    placeholder="Enter your admin token"
-    autocomplete="off"
+    placeholder="Enter admin password"
+    autocomplete="current-password"
   >
 
-  <label for="sql">SQL query</label>
-  <textarea id="sql" spellcheck="false">SELECT * FROM chars LIMIT 100;</textarea>
+  <button id="unlock">Unlock SQL Console</button>
 
-  <button id="execute">Execute SQL</button>
+  <div id="console">
+    <label for="sql">SQL Query</label>
 
-  <p id="status">Ready.</p>
-  <div id="output"></div>
+    <textarea id="sql" spellcheck="false">SELECT * FROM chars LIMIT 100;</textarea>
+
+    <button id="execute">Execute SQL</button>
+  </div>
+
+  <p id="status"></p>
+  <pre id="output"></pre>
 
   <script>
     const API_URL =
       "https://worker.rrrase-holden.workers.dev/admin-sql";
 
-    const sqlInput = document.getElementById("sql");
-    const tokenInput = document.getElementById("token");
+    const password = document.getElementById("password");
+    const consolePanel = document.getElementById("console");
     const status = document.getElementById("status");
     const output = document.getElementById("output");
-    const executeButton = document.getElementById("execute");
 
-    executeButton.addEventListener("click", executeSQL);
-
-    async function executeSQL() {
-      const sql = sqlInput.value.trim();
-      const token = tokenInput.value;
-
-      if (!sql) {
-        status.textContent = "Enter a SQL statement.";
+    document.getElementById("unlock").addEventListener("click", () => {
+      if (!password.value) {
+        status.textContent = "Enter your password.";
         return;
       }
 
-      if (!token) {
-        status.textContent = "Enter your admin token.";
-        return;
-      }
+      consolePanel.style.display = "block";
+      status.textContent = "SQL console unlocked.";
+    });
 
-      executeButton.disabled = true;
-      status.textContent = "Executing...";
-      output.replaceChildren();
+    document.getElementById("execute").addEventListener("click", async () => {
+      status.textContent = "Executing query...";
+      output.textContent = "";
 
       try {
         const response = await fetch(API_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            "Authorization": `Bearer ${password.value}`
           },
-          body: JSON.stringify({ sql })
+          body: JSON.stringify({
+            sql: document.getElementById("sql").value
+          })
         });
 
         const data = await response.json();
@@ -71,61 +71,11 @@
         }
 
         status.textContent = "Query executed successfully.";
-
-        if (Array.isArray(data.results) && data.results.length > 0) {
-          renderTable(data.results);
-        } else {
-          output.textContent = JSON.stringify(data, null, 2);
-        }
+        output.textContent = JSON.stringify(data, null, 2);
       } catch (error) {
         status.textContent = `Error: ${error.message}`;
-      } finally {
-        executeButton.disabled = false;
       }
-    }
-
-    function renderTable(rows) {
-      const table = document.createElement("table");
-      const thead = document.createElement("thead");
-      const tbody = document.createElement("tbody");
-
-      const columns = Object.keys(rows[0]);
-      const headerRow = document.createElement("tr");
-
-      for (const column of columns) {
-        const th = document.createElement("th");
-        th.textContent = column;
-        headerRow.appendChild(th);
-      }
-
-      thead.appendChild(headerRow);
-
-      for (const row of rows) {
-        const tr = document.createElement("tr");
-
-        for (const column of columns) {
-          const td = document.createElement("td");
-          const value = row[column];
-
-          td.textContent = value == null
-            ? "NULL"
-            : typeof value === "object"
-              ? JSON.stringify(value)
-              : String(value);
-
-          tr.appendChild(td);
-        }
-
-        tbody.appendChild(tr);
-      }
-
-      table.append(thead, tbody);
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "table-wrap";
-      wrapper.appendChild(table);
-      output.appendChild(wrapper);
-    }
+    });
   </script>
 </body>
 </html>
