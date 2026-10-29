@@ -28,31 +28,21 @@
   let characters = [];
 
   async function loadItems() {
-    status.textContent = "Loading database...";
 
     try {
       const response = await fetch(API_URL);
-      console.log("HTTP status:", response.status);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
 
       const data = await response.json();
-      console.log("API response:", data);
 
       // Your API may return an array directly or wrap it in an object.
       characters = Array.isArray(data)
         ? data
         : data.results ?? data.data ?? [];
 
-      console.log("Loaded records:", characters.length);
-      console.log("First record:", characters[0]);
 
       displayItems(characters);
     } catch (error) {
-      console.error("Failed to load database:", error);
-      status.textContent = "Failed to load database. Check console.";
+      status.textContent = "Error";
     }
   }
 
@@ -60,22 +50,44 @@
     itemsList.replaceChildren();
 
     if (items.length === 0) {
-      status.textContent = "No matching records found.";
+      status.textContent = "No codes found";
       return;
     }
 
-    status.textContent = `${items.length} record(s) found`;
+    status.textContent = `${items.length} codes found`;
+
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+
+    for (const heading of ["Name", "Code", "Au"]) {
+      const th = document.createElement("th");
+      th.textContent = heading;
+      headerRow.appendChild(th);
+    }
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
 
     for (const item of items) {
-      const li = document.createElement("li");
+      const row = document.createElement("tr");
 
-      li.textContent =
-        `${item.Name ?? item.name ?? "Unnamed"} | ` +
-        `Code: ${item.Code ?? item.code ?? ""} | ` +
-        `Au: ${item.Au ?? item.au ?? ""}`;
+      for (const value of [
+        item.Name ?? item.name ?? "",
+        item.Code ?? item.code ?? "",
+        item.Au ?? item.au ?? ""
+      ]) {
+        const td = document.createElement("td");
+        td.textContent = value ?? "";
+        row.appendChild(td);
+      }
 
-      itemsList.appendChild(li);
+      tbody.appendChild(row);
     }
+
+    table.appendChild(tbody);
+
   }
 
   searchInput.addEventListener("input", () => {
@@ -83,10 +95,7 @@
 
     const filtered = characters.filter(item => {
       // Convert the name to a string and ignore capitalization/spacing.
-      const name = String(item.Name ?? item.name ?? "")
-        .normalize("NFKC")
-        .trim()
-        .toLowerCase();
+      const name = String(item.Name ?? item.name ?? "").normalize("NFKC").trim().toLowerCase();
 
       return name.includes(query);
     });
