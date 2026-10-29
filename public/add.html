@@ -58,7 +58,7 @@
       status.textContent = "SQL console unlocked.";
     });
 
-    document.getElementById("execute").addEventListener("click", async () => {
+    async function executeSQL(sql, params) {
       status.textContent = "Executing query...";
       output.textContent = "";
 
@@ -70,7 +70,8 @@
             "Authorization": `Bearer ${password.value}`
           },
           body: JSON.stringify({
-            sql: "INSERT INTO chars (`Name`, `Au`, `Code`) VALUES ('" + document.getElementById("name").value + "', '" + document.getElementById("au").value + "', '" + document.getElementById("code").value + "');"
+            sql,
+            params
           })
         });
 
@@ -82,9 +83,26 @@
 
         status.textContent = "Query executed successfully.";
         output.textContent = JSON.stringify(data, null, 2);
+
       } catch (error) {
         status.textContent = `Error: ${error.message}`;
       }
+    }
+
+    document.getElementById("execute").addEventListener("click", () => {
+      const name = document.getElementById("name").value;
+      const au = document.getElementById("au").value;
+      const code = document.getElementById("code").value;
+
+      if (!name || !au || !code) {
+        status.textContent = "Please fill in all fields.";
+        return;
+      }
+
+      executeSQL(
+        "INSERT INTO chars (Name, Au, Code) VALUES (?, ?, ?)",
+        [name, au, code]
+      );
     });
 
     document.getElementById("delExecute").addEventListener("click", () => {
