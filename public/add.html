@@ -27,11 +27,12 @@
   </div>
 
   <div id="deller">
-    <label for="sql">SQL Query</label>
+    <h2>Delete Character</h2>
 
-    <textarea id="delName" spellcheck="false">Name</textarea>
+    <label for="delName">Character name</label>
+    <input id="delName" placeholder="Name to delete">
 
-    <button id="delExecute">Execute SQL</button>
+    <button id="delExecute">Delete Character</button>
   </div>
 
   <p id="status"></p>
@@ -86,33 +87,22 @@
       }
     });
 
-    document.getElementById("delExecute").addEventListener("click", async () => {
-      status.textContent = "Executing query...";
-      output.textContent = "";
+    document.getElementById("delExecute").addEventListener("click", () => {
+      const name = document.getElementById("delName").value;
 
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${password.value}`
-          },
-          body: JSON.stringify({
-            sql: "DELETE FROM chars WHERE Name='" + document.getElementById("delName").value + "';"
-          })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || `HTTP ${response.status}`);
-        }
-
-        status.textContent = "Query executed successfully.";
-        output.textContent = JSON.stringify(data, null, 2);
-      } catch (error) {
-        status.textContent = `Error: ${error.message}`;
+      if (!name) {
+        status.textContent = "Enter a character name.";
+        return;
       }
+
+      if (!confirm(`Are you sure you want to delete ${name}?`)) {
+        return;
+      }
+
+      executeSQL(
+        "DELETE FROM chars WHERE Name = ?",
+        [name]
+      );
     });
   </script>
 </body>
