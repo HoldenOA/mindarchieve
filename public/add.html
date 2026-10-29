@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Search D1 Database</title>
+</head>
+<body>
+  <h1>Search Characters</h1>
+
+  <input
+    type="search"
+    id="search"
+    placeholder="Search by name..."
+    autocomplete="off"
+  >
+
+  <p id="status">Loading database...</p>
+
+  <table id="items">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Au</th>
+        <th>Code</th>
+      </tr>
+    </thead>
+    <tbody id="results"></tbody>
+  </table>
+
+  <script>
+    const API_URL = "https://worker.rrrase-holden.workers.dev/";
+
+    const searchInput = document.getElementById("search");
+    const results = document.getElementById("results");
+    const status = document.getElementById("status");
+
+    let characters = [];
+
+    async function loadItems() {
+      try {
+        const response = await fetch(API_URL);
+
+        const data = await response.json();
+
+        characters = Array.isArray(data)
+          ? data
+          : data.results ?? data.data ?? [];
+
+        displayItems(characters);
+      } catch (error) {
+        status.textContent = "Error";
+      }
+    }
+
+    function displayItems(items) {
+      // Clear only the table body, keeping the headers intact.
+      results.replaceChildren();
+
+      if (items.length === 0) {
+        status.textContent = "No codes found";
+        return;
+      }
+
+      status.textContent = `${items.length} codes found`;
+
+      for (const item of items) {
+        const row = document.createElement("tr");
+
+        for (const value of [
+          item.Name ?? item.name ?? "",
+          item.Au ?? item.au ?? "",
+          item.Code ?? item.code ?? ""
+        ]) {
+          const td = document.createElement("td");
+          td.textContent = String(value);
+          row.appendChild(td);
+        }
+
+        results.appendChild(row);
+      }
+    }
+
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value
+        .trim()
+        .toLowerCase();
+
+      const filtered = characters.filter(item => {
+        const name = String(item.Name ?? item.name ?? "")
+          .normalize("NFKC")
+          .trim()
+          .toLowerCase();
+
+        return name.includes(query);
+      });
+
+      displayItems(filtered);
+    });
+
+    loadItems();
+  </script>
+</body>
+</html>
