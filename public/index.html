@@ -2,7 +2,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Search D1 Database</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 0 16px;
+    }
+
+    #search {
+      width: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #f2f2f2;
+    }
+  </style>
 </head>
 <body>
   <h1>Search Characters</h1>
@@ -15,105 +48,94 @@
   >
 
   <p id="status">Loading database...</p>
+
   <table id="items">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Code</th>
-      <th>Au</th>
-    </tr>
-  </thead>
-  <tbody id="results"></tbody>
-</table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Code</th>
+        <th>Au</th>
+      </tr>
+    </thead>
+    <tbody id="results"></tbody>
+  </table>
 
+  <script>
+    const API_URL = "https://worker.rrrase-holden.workers.dev/";
 
-<script>
-  const API_URL = "https://worker.rrrase-holden.workers.dev/";
+    const searchInput = document.getElementById("search");
+    const results = document.getElementById("results");
+    const status = document.getElementById("status");
 
-  const searchInput = document.getElementById("search");
-  const itemsList = document.getElementById("items");
-  const status = document.getElementById("status");
+    let characters = [];
 
-  let characters = [];
+    async function loadItems() {
+      try {
+        const response = await fetch(API_URL);
 
-  async function loadItems() {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
 
-    try {
-      const response = await fetch(API_URL);
+        const data = await response.json();
 
-      const data = await response.json();
+        characters = Array.isArray(data)
+          ? data
+          : data.results ?? data.data ?? [];
 
-      // Your API may return an array directly or wrap it in an object.
-      characters = Array.isArray(data)
-        ? data
-        : data.results ?? data.data ?? [];
-
-
-      displayItems(characters);
-    } catch (error) {
-      status.textContent = "Error";
-    }
-  }
-
-  function displayItems(items) {
-    itemsList.replaceChildren();
-
-    if (items.length === 0) {
-      status.textContent = "No codes found";
-      return;
+        displayItems(characters);
+      } catch (error) {
+        console.error("Database error:", error);
+        status.textContent = "Failed to load database.";
+      }
     }
 
-    status.textContent = `${items.length} codes found`;
+    function displayItems(items) {
+      // Clear only the table body, keeping the headers intact.
+      results.replaceChildren();
 
-    const thead = document.createElement("thead");
-    const headerRow = document.createElement("tr");
-
-    for (const heading of ["Name", "Code", "Au"]) {
-      const th = document.createElement("th");
-      th.textContent = heading;
-      headerRow.appendChild(th);
-    }
-
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
-
-    const tbody = document.createElement("tbody");
-
-    for (const item of items) {
-      const row = document.createElement("tr");
-
-      for (const value of [
-        item.Name ?? item.name ?? "",
-        item.Code ?? item.code ?? "",
-        item.Au ?? item.au ?? ""
-      ]) {
-        const td = document.createElement("td");
-        td.textContent = value ?? "";
-        row.appendChild(td);
+      if (items.length === 0) {
+        status.textContent = "No codes found";
+        return;
       }
 
-      tbody.appendChild(row);
+      status.textContent = `${items.length} codes found`;
+
+      for (const item of items) {
+        const row = document.createElement("tr");
+
+        for (const value of [
+          item.Name ?? item.name ?? "",
+          item.Code ?? item.code ?? "",
+          item.Au ?? item.au ?? ""
+        ]) {
+          const td = document.createElement("td");
+          td.textContent = String(value);
+          row.appendChild(td);
+        }
+
+        results.appendChild(row);
+      }
     }
 
-    table.appendChild(tbody);
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value
+        .trim()
+        .toLowerCase();
 
-  }
+      const filtered = characters.filter(item => {
+        const name = String(item.Name ?? item.name ?? "")
+          .normalize("NFKC")
+          .trim()
+          .toLowerCase();
 
-  searchInput.addEventListener("input", () => {
-    const query = searchInput.value.trim().toLowerCase();
+        return name.includes(query);
+      });
 
-    const filtered = characters.filter(item => {
-      // Convert the name to a string and ignore capitalization/spacing.
-      const name = String(item.Name ?? item.name ?? "").normalize("NFKC").trim().toLowerCase();
-
-      return name.includes(query);
+      displayItems(filtered);
     });
 
-    displayItems(filtered);
-  });
-
-  loadItems();
-</script>
-
+    loadItems();
+  </script>
 </body>
 </html>
