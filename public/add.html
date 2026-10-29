@@ -8,6 +8,14 @@
 <body>
   <h1>D1 SQL Console</h1>
 
+  <label for="token">Admin token</label>
+  <input
+    type="password"
+    id="token"
+    placeholder="Enter your admin token"
+    autocomplete="off"
+  >
+
   <label for="sql">SQL query</label>
   <textarea id="sql" spellcheck="false">SELECT * FROM chars LIMIT 100;</textarea>
 
@@ -21,6 +29,7 @@
       "https://worker.rrrase-holden.workers.dev/admin-sql";
 
     const sqlInput = document.getElementById("sql");
+    const tokenInput = document.getElementById("token");
     const status = document.getElementById("status");
     const output = document.getElementById("output");
     const executeButton = document.getElementById("execute");
@@ -29,9 +38,15 @@
 
     async function executeSQL() {
       const sql = sqlInput.value.trim();
+      const token = tokenInput.value;
 
       if (!sql) {
         status.textContent = "Enter a SQL statement.";
+        return;
+      }
+
+      if (!token) {
+        status.textContent = "Enter your admin token.";
         return;
       }
 
@@ -43,7 +58,8 @@
         const response = await fetch(API_URL, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({ sql })
         });
