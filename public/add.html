@@ -21,7 +21,9 @@
   <div id="console">
     <label for="sql">SQL Query</label>
 
-    <textarea id="sql" spellcheck="false">SELECT * FROM chars LIMIT 100;</textarea>
+    <textarea id="name" spellcheck="false">Name</textarea>
+    <textarea id="au" spellcheck="false">Au</textarea>
+    <textarea id="code" spellcheck="false">Code</textarea>
 
     <button id="execute">Execute SQL</button>
   </div>
@@ -60,7 +62,7 @@
             "Authorization": `Bearer ${password.value}`
           },
           body: JSON.stringify({
-            sql: "SELECT * from chars"
+            sql: 'INSERT INTO chars (`name`,`Au`,`Code`) VALUES (`' + document.getElementById("name").value + '`),(`)' + document.getElementById("au").value + '`),(`)' + document.getElementById("code").value + '`);'
           })
         });
 
