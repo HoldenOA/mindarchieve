@@ -85,6 +85,35 @@
         status.textContent = `Error: ${error.message}`;
       }
     });
+
+    document.getElementById("delExecute").addEventListener("click", async () => {
+      status.textContent = "Executing query...";
+      output.textContent = "";
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${password.value}`
+          },
+          body: JSON.stringify({
+            sql: "DELETE FROM chars WHERE Name='" + document.getElementById("delName").value + "';"
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || `HTTP ${response.status}`);
+        }
+
+        status.textContent = "Query executed successfully.";
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        status.textContent = `Error: ${error.message}`;
+      }
+    });
   </script>
 </body>
 </html>
