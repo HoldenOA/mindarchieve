@@ -62,7 +62,7 @@
             "Authorization": `Bearer ${password.value}`
           },
           body: JSON.stringify({
-            sql: 'INSERT INTO chars (`Name`,`Au`,`Code`) VALUES (`' + document.getElementById("name").value + '`),(`' + document.getElementById("au").value + '`),(`' + document.getElementById("code").value + '`);'
+            sql: "INSERT INTO chars (`Name`, `Au`, `Code`) VALUES ('" + document.getElementById("name").value + "', '" + document.getElementById("au").value + "', '" + document.getElementById("code").value + "');"
           })
         });
 
