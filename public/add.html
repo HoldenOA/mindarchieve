@@ -4,102 +4,191 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Search D1 Database</title>
+  <title>D1 SQL Console</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 16px;
+      background: #f7f7f7;
+      color: #222;
+    }
+
+    textarea, input, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 180px;
+      font-family: monospace;
+      resize: vertical;
+    }
+
+    button {
+      cursor: pointer;
+      background: #222;
+      color: white;
+      border: 0;
+      border-radius: 4px;
+    }
+
+    #status {
+      white-space: pre-wrap;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+
+    th {
+      background: #eee;
+    }
+
+    #output {
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Search Characters</h1>
+  <h1>D1 SQL Console</h1>
 
+  <label for="token">Admin token</label>
   <input
-    type="search"
-    id="search"
-    placeholder="Search by name..."
+    type="password"
+    id="token"
+    placeholder="Enter your admin token"
     autocomplete="off"
   >
 
-  <p id="status">Loading database...</p>
+  <label for="sql">SQL query</label>
+  <textarea id="sql" spellcheck="false">SELECT * FROM chars LIMIT 100;</textarea>
 
-  <table id="items">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Au</th>
-        <th>Code</th>
-      </tr>
-    </thead>
-    <tbody id="results"></tbody>
-  </table>
+  <button id="execute">Execute SQL</button>
+
+  <p id="status">Ready.</p>
+  <div id="output"></div>
 
   <script>
-    const API_URL = "https://worker.rrrase-holden.workers.dev/";
+    const API_URL =
+      "https://worker.rrrase-holden.workers.dev/admin-sql";
 
-    const searchInput = document.getElementById("search");
-    const results = document.getElementById("results");
+    const sqlInput = document.getElementById("sql");
+    const tokenInput = document.getElementById("token");
     const status = document.getElementById("status");
+    const output = document.getElementById("output");
+    const executeButton = document.getElementById("execute");
 
-    let characters = [];
+    executeButton.addEventListener("click", executeSQL);
 
-    async function loadItems() {
-      try {
-        const response = await fetch(API_URL);
+    async function executeSQL() {
+      const sql = sqlInput.value.trim();
+      const token = tokenInput.value;
 
-        const data = await response.json();
-
-        characters = Array.isArray(data)
-          ? data
-          : data.results ?? data.data ?? [];
-
-        displayItems(characters);
-      } catch (error) {
-        status.textContent = "Error";
-      }
-    }
-
-    function displayItems(items) {
-      // Clear only the table body, keeping the headers intact.
-      results.replaceChildren();
-
-      if (items.length === 0) {
-        status.textContent = "No codes found";
+      if (!sql) {
+        status.textContent = "Enter a SQL statement.";
         return;
       }
 
-      status.textContent = `${items.length} codes found`;
+      if (!token) {
+        status.textContent = "Enter your admin token.";
+        return;
+      }
 
-      for (const item of items) {
-        const row = document.createElement("tr");
+      executeButton.disabled = true;
+      status.textContent = "Executing...";
+      output.replaceChildren();
 
-        for (const value of [
-          item.Name ?? item.name ?? "",
-          item.Au ?? item.au ?? "",
-          item.Code ?? item.code ?? ""
-        ]) {
-          const td = document.createElement("td");
-          td.textContent = String(value);
-          row.appendChild(td);
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ sql })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || `HTTP ${response.status}`);
         }
 
-        results.appendChild(row);
+        status.textContent = "Query executed successfully.";
+
+        if (Array.isArray(data.results) && data.results.length > 0) {
+          renderTable(data.results);
+        } else {
+          output.textContent = JSON.stringify(data, null, 2);
+        }
+      } catch (error) {
+        status.textContent = `Error: ${error.message}`;
+      } finally {
+        executeButton.disabled = false;
       }
     }
 
-    searchInput.addEventListener("input", () => {
-      const query = searchInput.value
-        .trim()
-        .toLowerCase();
+    function renderTable(rows) {
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const tbody = document.createElement("tbody");
 
-      const filtered = characters.filter(item => {
-        const name = String(item.Name ?? item.name ?? "")
-          .normalize("NFKC")
-          .trim()
-          .toLowerCase();
+      const columns = Object.keys(rows[0]);
+      const headerRow = document.createElement("tr");
 
-        return name.includes(query);
-      });
+      for (const column of columns) {
+        const th = document.createElement("th");
+        th.textContent = column;
+        headerRow.appendChild(th);
+      }
 
-      displayItems(filtered);
-    });
+      thead.appendChild(headerRow);
 
-    loadItems();
+      for (const row of rows) {
+        const tr = document.createElement("tr");
+
+        for (const column of columns) {
+          const td = document.createElement("td");
+          const value = row[column];
+
+          td.textContent = value == null
+            ? "NULL"
+            : typeof value === "object"
+              ? JSON.stringify(value)
+              : String(value);
+
+          tr.appendChild(td);
+        }
+
+        tbody.appendChild(tr);
+      }
+
+      table.append(thead, tbody);
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "table-wrap";
+      wrapper.appendChild(table);
+      output.appendChild(wrapper);
+    }
   </script>
 </body>
 </html>
