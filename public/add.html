@@ -16,9 +16,7 @@
     autocomplete="current-password"
   >
 
-  <button id="unlock">Unlock SQL Console</button>
-
-  <div id="console">
+  <div id="adder">
     <label for="sql">SQL Query</label>
 
     <textarea id="name" spellcheck="false">Name</textarea>
@@ -26,6 +24,14 @@
     <textarea id="code" spellcheck="false">Code</textarea>
 
     <button id="execute">Execute SQL</button>
+  </div>
+
+  <div id="deller">
+    <label for="sql">SQL Query</label>
+
+    <textarea id="delName" spellcheck="false">Name</textarea>
+
+    <button id="delExecute">Execute SQL</button>
   </div>
 
   <p id="status"></p>
@@ -36,7 +42,8 @@
       "https://worker.rrrase-holden.workers.dev/admin-sql";
 
     const password = document.getElementById("password");
-    const consolePanel = document.getElementById("console");
+    const addPanel = document.getElementById("adder");
+    const delPanel = document.getElementById("deller");
     const status = document.getElementById("status");
     const output = document.getElementById("output");
 
@@ -46,7 +53,7 @@
         return;
       }
 
-      consolePanel.style.display = "block";
+      addPanel.style.display = "block";
       status.textContent = "SQL console unlocked.";
     });
 
