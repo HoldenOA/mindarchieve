@@ -16,14 +16,21 @@
     autocomplete="current-password"
   >
 
+  <button id="unlock">Unlock Console</button>
+
   <div id="adder">
-    <label for="sql">SQL Query</label>
+    <h2>Add Character</h2>
 
-    <textarea id="name" spellcheck="false">Name</textarea>
-    <textarea id="au" spellcheck="false">Au</textarea>
-    <textarea id="code" spellcheck="false">Code</textarea>
+    <label for="name">Name</label>
+    <input id="name" placeholder="Name">
 
-    <button id="execute">Execute SQL</button>
+    <label for="au">Au</label>
+    <input id="au" placeholder="Au">
+
+    <label for="code">Code</label>
+    <input id="code" placeholder="Code">
+
+    <button id="execute">Add Character</button>
   </div>
 
   <div id="deller">
@@ -55,7 +62,9 @@
       }
 
       addPanel.style.display = "block";
-      status.textContent = "SQL console unlocked.";
+      delPanel.style.display = "block";
+
+      status.textContent = "Console unlocked.";
     });
 
     async function executeSQL(sql, params) {
@@ -89,6 +98,7 @@
       }
     }
 
+    // ADD CHARACTER
     document.getElementById("execute").addEventListener("click", () => {
       const name = document.getElementById("name").value;
       const au = document.getElementById("au").value;
@@ -105,6 +115,7 @@
       );
     });
 
+    // DELETE CHARACTER
     document.getElementById("delExecute").addEventListener("click", () => {
       const name = document.getElementById("delName").value;
 
