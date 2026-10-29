@@ -3,20 +3,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My D1 Database</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Search D1 Database</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+
+    #search {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin: 12px 0;
+      font-size: 16px;
+    }
+
+    li {
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    #status {
+      color: #666;
+    }
+  </style>
 </head>
 <body>
-  <h1>Items from my database</h1>
+  <h1>Search Characters</h1>
+
+  <input
+    type="search"
+    id="search"
+    placeholder="Search by name..."
+    autocomplete="off"
+  >
+
+  <p id="status">Loading database...</p>
   <ul id="items"></ul>
-  <p id="status"></p>
 
   <script>
-    const API_URL =
-      "https://worker.rrrase-holden.workers.dev/";
+    const API_URL = "https://worker.rrrase-holden.workers.dev/";
+
+    const searchInput = document.getElementById("search");
+    const itemsList = document.getElementById("items");
+    const status = document.getElementById("status");
+
+    let characters = [];
 
     async function loadItems() {
-      const status = document.getElementById("status");
-
       try {
         const response = await fetch(API_URL);
 
@@ -24,23 +61,48 @@
           throw new Error(`HTTP ${response.status}`);
         }
 
-        const items = await response.json();
-        const list = document.getElementById("items");
+        characters = await response.json();
 
-        list.replaceChildren();
-
-        for (const item of items) {
-          const li = document.createElement("li");
-          li.textContent = `${item.Name}, ${item.Au}: ${item.Code}`;
-          list.appendChild(li);
+        if (!Array.isArray(characters)) {
+          throw new Error("Invalid API response");
         }
 
-        status.textContent = `${items.length} items loaded`;
+        displayItems(characters);
       } catch (error) {
-        status.textContent = "Could not load database items.";
-        console.error(error);
+        console.error("Failed to load characters:", error);
+        status.textContent = "Failed to load database.";
       }
     }
+
+    function displayItems(items) {
+      itemsList.replaceChildren();
+
+      if (items.length === 0) {
+        status.textContent = "No characters found.";
+        return;
+      }
+
+      status.textContent = `${items.length} character(s) found`;
+
+      for (const item of items) {
+        const li = document.createElement("li");
+
+        li.textContent =
+          `${item.name} | Code: ${item.code} | Au: ${item.au}`;
+
+        itemsList.appendChild(li);
+      }
+    }
+
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.trim().toLowerCase();
+
+      const filtered = characters.filter(item =>
+        String(item.name ?? "").toLowerCase().includes(query)
+      );
+
+      displayItems(filtered);
+    });
 
     loadItems();
   </script>
