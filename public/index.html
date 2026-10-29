@@ -17,67 +17,85 @@
   <p id="status">Loading database...</p>
   <ul id="items"></ul>
 
-  <script>
-    const API_URL = "https://worker.rrrase-holden.workers.dev/";
 
-    const searchInput = document.getElementById("search");
-    const itemsList = document.getElementById("items");
-    const status = document.getElementById("status");
+<script>
+  const API_URL = "https://worker.rrrase-holden.workers.dev/";
 
-    let characters = [];
+  const searchInput = document.getElementById("search");
+  const itemsList = document.getElementById("items");
+  const status = document.getElementById("status");
 
-    async function loadItems() {
-      try {
-        const response = await fetch(API_URL);
+  let characters = [];
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+  async function loadItems() {
+    status.textContent = "Loading database...";
 
-        characters = await response.json();
+    try {
+      const response = await fetch(API_URL);
+      console.log("HTTP status:", response.status);
 
-        if (!Array.isArray(characters)) {
-          throw new Error("Invalid API response");
-        }
-
-        displayItems(characters);
-      } catch (error) {
-        console.error("Failed to load characters:", error);
-        status.textContent = "Failed to load database.";
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
+
+      const data = await response.json();
+      console.log("API response:", data);
+
+      // Your API may return an array directly or wrap it in an object.
+      characters = Array.isArray(data)
+        ? data
+        : data.results ?? data.data ?? [];
+
+      console.log("Loaded records:", characters.length);
+      console.log("First record:", characters[0]);
+
+      displayItems(characters);
+    } catch (error) {
+      console.error("Failed to load database:", error);
+      status.textContent = "Failed to load database. Check console.";
+    }
+  }
+
+  function displayItems(items) {
+    itemsList.replaceChildren();
+
+    if (items.length === 0) {
+      status.textContent = "No matching records found.";
+      return;
     }
 
-    function displayItems(items) {
-      itemsList.replaceChildren();
+    status.textContent = `${items.length} record(s) found`;
 
-      if (items.length === 0) {
-        status.textContent = "No characters found.";
-        return;
-      }
+    for (const item of items) {
+      const li = document.createElement("li");
 
-      status.textContent = `${items.length} character(s) found`;
+      li.textContent =
+        `${item.Name ?? item.name ?? "Unnamed"} | ` +
+        `Code: ${item.Code ?? item.code ?? ""} | ` +
+        `Au: ${item.Au ?? item.au ?? ""}`;
 
-      for (const item of items) {
-        const li = document.createElement("li");
-
-        li.textContent =
-          `${item.name} | Code: ${item.code} | Au: ${item.au}`;
-
-        itemsList.appendChild(li);
-      }
+      itemsList.appendChild(li);
     }
+  }
 
-    searchInput.addEventListener("input", () => {
-      const query = searchInput.value.trim().toLowerCase();
+  searchInput.addEventListener("input", () => {
+    const query = searchInput.value.trim().toLowerCase();
 
-      const filtered = characters.filter(item =>
-        String(item.name ?? "").toLowerCase().includes(query)
-      );
+    const filtered = characters.filter(item => {
+      // Convert the name to a string and ignore capitalization/spacing.
+      const name = String(item.Name ?? item.name ?? "")
+        .normalize("NFKC")
+        .trim()
+        .toLowerCase();
 
-      displayItems(filtered);
+      return name.includes(query);
     });
 
-    loadItems();
-  </script>
+    displayItems(filtered);
+  });
+
+  loadItems();
+</script>
+
 </body>
 </html>
