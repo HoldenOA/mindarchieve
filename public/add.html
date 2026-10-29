@@ -2,82 +2,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>D1 SQL Console</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 0 16px;
-      background: #f7f7f7;
-      color: #222;
-    }
-
-    textarea, input, button {
-      box-sizing: border-box;
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      font: inherit;
-    }
-
-    textarea {
-      min-height: 180px;
-      font-family: monospace;
-      resize: vertical;
-    }
-
-    button {
-      cursor: pointer;
-      background: #222;
-      color: white;
-      border: 0;
-      border-radius: 4px;
-    }
-
-    #status {
-      white-space: pre-wrap;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: left;
-      white-space: pre-wrap;
-    }
-
-    th {
-      background: #eee;
-    }
-
-    #output {
-      margin-top: 20px;
-    }
-  </style>
 </head>
 <body>
   <h1>D1 SQL Console</h1>
-
-  <label for="token">Admin token</label>
-  <input
-    type="password"
-    id="token"
-    placeholder="Enter your admin token"
-    autocomplete="off"
-  >
 
   <label for="sql">SQL query</label>
   <textarea id="sql" spellcheck="false">SELECT * FROM chars LIMIT 100;</textarea>
@@ -92,7 +21,6 @@
       "https://worker.rrrase-holden.workers.dev/admin-sql";
 
     const sqlInput = document.getElementById("sql");
-    const tokenInput = document.getElementById("token");
     const status = document.getElementById("status");
     const output = document.getElementById("output");
     const executeButton = document.getElementById("execute");
@@ -101,15 +29,9 @@
 
     async function executeSQL() {
       const sql = sqlInput.value.trim();
-      const token = tokenInput.value;
 
       if (!sql) {
         status.textContent = "Enter a SQL statement.";
-        return;
-      }
-
-      if (!token) {
-        status.textContent = "Enter your admin token.";
         return;
       }
 
@@ -121,8 +43,7 @@
         const response = await fetch(API_URL, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({ sql })
         });
