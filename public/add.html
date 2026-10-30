@@ -16,30 +16,28 @@
     autocomplete="current-password"
   >
 
-  <button id="unlock">Unlock Console</button>
-
   <div id="adder">
-    <h2>Add Character</h2>
+    <h2>Add Character Code</h2>
 
     <label for="name">Name</label>
-    <input id="name" placeholder="Name">
+    <input id="name" placeholder="Name"> <br>
 
     <label for="au">Au</label>
-    <input id="au" placeholder="Au">
+    <input id="au" placeholder="Au"> <br>
 
     <label for="code">Code</label>
-    <input id="code" placeholder="Code">
+    <input id="code" placeholder="Code"> <br>
 
-    <button id="execute">Add Character</button>
+    <button id="execute">Add</button>
   </div>
 
   <div id="deller">
-    <h2>Delete Character</h2>
+    <h2>Delete Character Code</h2>
 
-    <label for="delName">Character name</label>
-    <input id="delName" placeholder="Name to delete">
+    <label for="delName">Name</label>
+    <input id="delName" placeholder="Name to delete"> <br>
 
-    <button id="delExecute">Delete Character</button>
+    <button id="delExecute">Delete</button>
   </div>
 
   <p id="status"></p>
@@ -121,10 +119,6 @@
 
       if (!name) {
         status.textContent = "Enter a character name.";
-        return;
-      }
-
-      if (!confirm(`Are you sure you want to delete ${name}?`)) {
         return;
       }
 
