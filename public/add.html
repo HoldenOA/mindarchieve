@@ -128,10 +128,6 @@
         return;
       }
 
-      if (!confirm(`Are you sure you want to delete ${name}?`)) {
-        return;
-      }
-
       executeSQL(
         "DELETE FROM chars WHERE Name = ?",
         [name]
